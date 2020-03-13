@@ -3,6 +3,213 @@
 Rachmad Budi Santoso    05111840000122
 Khofifah Nurlaela       05111840000025
 ```
+## soal1
+Buatlah program C yang menyerupai crontab untuk menjalankan script bash dengan ketentuan sebagai berikut: <br/>
+(a) Program menerima 4 argumen berupa: <br/>
+i. Detik: 0-59 atau * (any value) <br/>
+ii. Menit: 0-59 atau * (any value) <br/>
+iii. Jam: 0-23 atau * (any value) <br/>
+iv. Path file .sh  <br/>
+(b) Program akan mengeluarkan pesan error jika argumen yang diberikan tidak sesuai <br/>
+(c) Program hanya menerima 1 config cron <br/>
+(d) Program berjalan di background (daemon) <br/>
+(e) Tidak boleh menggunakan fungsi system() <br/>
+
+# Jawaban
+```
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <syslog.h>
+#include <string.h>
+#include <time.h>
+
+int cekangka(char argument[]) {
+    //cek value argument kudu angka 1-9
+    //saya ga sanggup mikir kalo kaya crontab ada angka yg negatif
+    for(int cek=0; cek<strlen(argument); cek++) {
+        if(argument[cek] < '1' || argument[cek] > '9') {
+            return 0;
+        }
+    }
+    //printf("weee\n");
+    return 1;
+}
+
+int apakahbintang(char argument[]) {
+    if(strlen(argument) == 1) {
+        if(argument[0] == '*') {
+            //printf("masuk gan\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void jalankan(char path[]) {
+    char *argact[] = {"bash", path, NULL};
+    execv("/bin/bash", argact); 
+}
+
+void perdaemonanduniawi() {
+    pid_t pid, sid;        // Variabel untuk menyimpan PID
+
+    pid = fork();     // Menyimpan PID dari Child Process
+
+    /* Keluar saat fork gagal
+    * (nilai variabel pid < 0) */
+    if (pid < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    /* Keluar saat fork berhasil
+    * (nilai variabel pid adalah PID dari child process) */
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    umask(0);
+
+    sid = setsid();
+    if (sid < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if ((chdir("/home/boodboy/SISOP/modul2/prak")) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+}
+
+int main(int argc, char** argv) { 
+    if(argc != 5) {
+        printf("format argumen kaga bener!\n");
+        printf("jumlah argumen harus ada 5!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        int isi[4];
+
+        printf("kamu memasukkan %d arguments: \n", argc); 
+        //cek semua value argumen tampilin
+        for(int index = 0; index < argc; index++) {
+            printf("isi[%d]: %s\n", index, argv[index]);
+        } 
+
+        //buat angka ala2 cronnya
+        for(int i=1; i<=3; i++) {
+            if(cekangka(argv[i])) {
+                isi[i]=atoi(argv[i]);//ubah char ke int
+            }
+            else if(apakahbintang(argv[i])) {
+                if(i == 3) {
+                    isi[i]=-24;
+                }
+                else isi[i]=-60;
+            }
+            else {
+                printf("format argumen ke %d: %s ga bener!\n", i, argv[i]);
+                printf("ada yg ga angka atau ga bintang(*)!\n");
+                exit(EXIT_FAILURE);
+            }
+        } 
+
+        int detik = isi[1];
+        int menit = isi[2];
+        int jam   = isi[3];
+
+        if(detik > 59 || menit > 59 || jam > 23) {
+            printf("format argumen ga bener!\n");
+            printf("format detik(0-59), menit(0-59), jam(0-23)!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        perdaemonanduniawi();
+        char lokasi[80];
+        strcpy(lokasi,argv[4]);
+
+        while(1) {
+            time_t rawtime;
+            struct tm *uinfo;
+
+            time(&rawtime);
+            uinfo = localtime(&rawtime);
+
+            pid_t child_id;
+            child_id = fork();
+
+            if((uinfo->tm_sec == detik || detik == -60) 
+            && (uinfo->tm_min == menit || menit == -60)
+            && (uinfo->tm_hour == jam || jam == -24)) {
+                if(child_id == 0){
+                    //child
+                    //printf("aw\n");
+                    jalankan(lokasi);
+                }
+                else {
+                    //parent
+                }
+            }
+            sleep(1);
+        }
+    }
+    return 0;
+}
+```
+
+## soal2
+Shisoppu mantappu! itulah yang selalu dikatakan Kiwa setiap hari karena sekarang dia merasa sudah jago materi sisop. Karena merasa jago, 
+suatu hari Kiwa iseng membuat sebuah program. <br/>
+(a) Pertama-tama, Kiwa  membuat sebuah folder khusus, di dalamnya dia membuat sebuah program C yang per 30 detik membuat sebuah folder 
+dengan nama timestamp [YYYY-mm-dd_HH:ii:ss]. <br/>
+
+Untuk membuat suatu folder menggunakan perintah berikut.
+```
+if(child_id == 0) {
+   char *argv[] = {"mkdir", "-p", buffer, NULL};
+   execv("/bin/mkdir", argv);
+}
+```
+Agar folder yang dibuat diberi dengan nama timestamp, digunakan perintah berikut.
+```
+time( &rawtime );
+
+   info = localtime( &rawtime );
+   
+   	strftime(buffer,80,"%Y-%m-%d_%H:%M:%S", info);
+  	// printf("Formatted date & time : |%s|\n", buffer );
+```
+Dimana : <br/>
+`time( &rawtime )` merupakan variable dengan type data time. <br/>
+`info = localtime( &rawtime )` untuk mendapatkan timestamp dari komputer. <br/>
+`strftime(buffer,80,"%Y-%m-%d_%H:%M:%S", info)` untuk mengisi variable `buffer` dengan timestamp yang didapat sesuai format
+[YYYY-mm-dd_HH:ii:ss]. <br/>
+
+(b) Tiap-tiap folder lalu diisi dengan 20 gambar yang di download dari https://picsum.photos/, dimana tiap gambar di download setiap 5 
+detik. Tiap gambar berbentuk persegi dengan ukuran (t%1000)+100 piksel dimana t adalah detik Epoch Unix. Gambar tersebut diberi nama 
+dengan format timestamp [YYYYmm-dd_HH:ii:ss]. <br/>
+(c) Agar rapi, setelah sebuah folder telah terisi oleh 20 gambar, folder akan di zip dan folder akan di delete(sehingga hanya menyisakan 
+.zip). <br/>
+(d) Karena takut program tersebut lepas kendali, Kiwa ingin program tersebut mengenerate sebuah program "killer" yang siap di 
+run(executable) untuk menterminasi semua operasi program tersebut. Setelah di run, program yang menterminasi ini lalu akan mendelete 
+dirinya sendiri. <br/>
+(e) Kiwa menambahkan bahwa program utama bisa dirun dalam dua mode, yaitu MODE_A dan MODE_B. Untuk mengaktifkan MODE_A, program harus 
+dijalankan dengan argumen -a. Untuk MODE_B, program harus dijalankan dengan argumen -b. Ketika dijalankan dalam MODE_A, program utama 
+akan langsung menghentikan semua operasinya ketika program killer dijalankan. Untuk MODE_B, ketika program killer dijalankan, program 
+utama akan berhenti tapi membiarkan proses di setiap folder yang masih berjalan sampai selesai(semua folder terisi gambar, terzip lalu 
+di delete). <br/>
+
+# Kendala
+Untuk soal nomor 2 ini baru bisa sampai pembuatan direktori dengan nama file timestamp. Masih terjadi error saat menjalankan fungsi 
+download. Untuk sisa jawaban dari soal2 ini akan dicoba saat revisi.
 
 ## soal3
 Jaya adalah seorang programmer handal mahasiswa informatika. Suatu hari dia memperoleh tugas yang banyak dan berbeda tetapi harus 
@@ -45,7 +252,7 @@ dipindahkan ke “/home/[USER]/modul2/indomie/”.
    }
 ```
 Untuk memindahkan semua direktori yang ada di jpg ke direktori indomie, kita harus mengelompokkan dulu mana yang termasuk direktori dan 
-mana yang termasuk file. Caranya dengan menggunakan command `find`. Secara lengkapnya : 
+mana yang termasuk file. Caranya dengan menggunakan command `find`. Secara lengkapnya : <br/>
 `find /home/elaaaaaaa/modul2/jpg -maxdepth 1 -mindepth 1 -type d -exec mv '{}' /home/elaaaaaaa/modul2/indomie/ \;`
 `/home/elaaaaaaa/modul2/jpg` merupakan root directory. <br/>
 `-maxdepth 1` artinya hanya memproses di root directory. <br/>
