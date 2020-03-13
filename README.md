@@ -15,7 +15,7 @@ iv. Path file .sh  <br/>
 (d) Program berjalan di background (daemon) <br/>
 (e) Tidak boleh menggunakan fungsi system() <br/>
 
-# Jawaban
+### Jawaban
 ```
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -196,6 +196,14 @@ Dimana : <br/>
 (b) Tiap-tiap folder lalu diisi dengan 20 gambar yang di download dari https://picsum.photos/, dimana tiap gambar di download setiap 5 
 detik. Tiap gambar berbentuk persegi dengan ukuran (t%1000)+100 piksel dimana t adalah detik Epoch Unix. Gambar tersebut diberi nama 
 dengan format timestamp [YYYYmm-dd_HH:ii:ss]. <br/>
+Untuk mendownload gambar dari link yang tersedia menggunakan perintah berikut:
+```
+void unduh() {
+    char *argv[] = {"wget", "-o", tujuan, web, NULL};
+    execv("/bin/wget", argv);
+}
+```
+
 (c) Agar rapi, setelah sebuah folder telah terisi oleh 20 gambar, folder akan di zip dan folder akan di delete(sehingga hanya menyisakan 
 .zip). <br/>
 (d) Karena takut program tersebut lepas kendali, Kiwa ingin program tersebut mengenerate sebuah program "killer" yang siap di 
@@ -207,7 +215,7 @@ akan langsung menghentikan semua operasinya ketika program killer dijalankan. Un
 utama akan berhenti tapi membiarkan proses di setiap folder yang masih berjalan sampai selesai(semua folder terisi gambar, terzip lalu 
 di delete). <br/>
 
-# Kendala
+### Kendala
 Untuk soal nomor 2 ini baru bisa sampai pembuatan direktori dengan nama file timestamp. Masih terjadi error saat menjalankan fungsi 
 download. Untuk sisa jawaban dari soal2 ini akan dicoba saat revisi.
 
