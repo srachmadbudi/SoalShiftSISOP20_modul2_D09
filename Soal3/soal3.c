@@ -16,20 +16,23 @@ int main(){
    DIR *d;
    struct dirent *dir;
 
+   //membuat directory indomie
    if((child_id_1=fork()) == 0){
 	char *argv[] = {"/bin/mkdir","-p", "/home/elaaaaaaa/Modul2/indomie", NULL};
 	execv(argv[0], argv);
 	printf("Error 1");
    }
 
+   //membuat directory sedaap
    while ((wait(&status))>0);
    if((child_id_2=fork()) == 0){
-	sleep(5);
+	sleep(5);	//untuk menjeda selama 5 detik
 	char *argv[] = {"/bin/mkdir","-p", "/home/elaaaaaaa/Modul2/sedaap", NULL};
 	execv(argv[0], argv);
 	printf("Error 2");
    }
 
+   //untuk mengekstrak file jpg.zip
    while ((wait(&status))>0);
    if((child_id_3=fork()) == 0){
 	sprintf(zipfile, "/home/elaaaaaaa/Modul2/jpg.zip");
@@ -38,6 +41,7 @@ int main(){
 	printf("Error 3");
    }
 
+   //untuk memindahkan directory ke indomie
    while ((wait(&status))>0);
    if((child_id_4=fork()) == 0){
 	char *argv[] = {"/usr/bin/find", "/home/elaaaaaaa/Modul2/jpg", "-mindepth", "1", "-maxdepth", "1", "-type", "d", "-exec", "mv","-t", "/home/elaaaaaaa/Modul2/indomie", "{}", ";", NULL};
@@ -45,6 +49,7 @@ int main(){
 	printf("Error 4");
    }
 
+   //untuk memindahkan file ke sedaap
    while ((wait(&status))>0);
    if((child_id_5=fork()) == 0){
 	char *argv[] = {"/usr/bin/find", "/home/elaaaaaaa/Modul2/jpg", "-mindepth", "1", "-maxdepth", "1", "-type", "f", "-exec", "mv","-t", "/home/elaaaaaaa/Modul2/sedaap", "{}", ";", NULL};
@@ -52,6 +57,7 @@ int main(){
 	printf("Error 5");
    }
 
+   //untuk setiap directory di indomie, membuat file coba1.txt
    while ((wait(&status)) > 0);
    if((child_id_6=fork()) == 0){
 	char *argv[] = {"/usr/bin/find", "/home/elaaaaaaa/Modul2/indomie", "-mindepth", "1", "-type", "d", "-exec", "touch", "{}/coba1.txt",";", NULL};
@@ -68,9 +74,10 @@ int main(){
 	} */
    } 
 
+     //untuk setiap directory di indomie, membuat file coba2.txt
      while ((wait(&status)) > 0);
      if((child_id_7=fork()) == 0){
-	sleep(3);
+	sleep(3);	//menjeda selama 3 detik
 	char *argv[] = {"/usr/bin/find", "/home/elaaaaaaa/Modul2/indomie", "-mindepth", "1", "-type", "d", "-exec", "touch", "{}/coba2.txt",";", NULL};
     	execv(argv[0], argv);
 	/*d = opendir("/home/elaaaaaaa/Modul2/indomie");
