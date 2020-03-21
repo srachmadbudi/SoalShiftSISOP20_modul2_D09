@@ -180,12 +180,14 @@ if(child_id == 0) {
 ```
 Agar folder yang dibuat diberi dengan nama timestamp, digunakan perintah berikut.
 ```
-time( &rawtime );
-
-   info = localtime( &rawtime );
-   
-   	strftime(buffer,80,"%Y-%m-%d_%H:%M:%S", info);
-  	// printf("Formatted date & time : |%s|\n", buffer );
+time_t rawtime;
+struct tm *info;
+time(&rawtime);
+char buff[32], folder[80];
+info = localtime(&rawtime);
+strftime(buff, sizeof(buff), "%Y-%m-%d_%H:%M:%S", info);
+strcpy(folder, "/home/elaaaaaaa/Soal2/");
+strcat(folder, buff);
 ```
 Dimana : <br/>
 `time( &rawtime )` merupakan variable dengan type data time. <br/>
@@ -198,26 +200,89 @@ detik. Tiap gambar berbentuk persegi dengan ukuran (t%1000)+100 piksel dimana t 
 dengan format timestamp [YYYYmm-dd_HH:ii:ss]. <br/>
 Untuk mendownload gambar dari link yang tersedia menggunakan perintah berikut:
 ```
-void unduh() {
-    char *argv[] = {"wget", "-o", tujuan, web, NULL};
-    execv("/bin/wget", argv);
-}
+chdir(folder);
+int i;
+for(i=0; i<20; i++)
+{
+   if(fork() == 0)
+   {
+	time_t fileTime;
+  	struct tm *infotime;
+  	time(&fileTime);
+  	char file[512];
+  	infotime = localtime(&fileTime);
+  	strftime(file, sizeof(file), "%Y-%m-%d_%H:%M:%S", infotime);
+	int t = (int) time(NULL);
+	t = (t%1000) + 100;
+
+	char url[512];
+	sprintf(url, "http://picsum.photos/%d", t);
+
+	char *args[] = {"wget", "-O", file, url, NULL};
+	execv("/usr/bin/wget", args);
+   }
+   sleep(5);
+ }
 ```
 
 (c) Agar rapi, setelah sebuah folder telah terisi oleh 20 gambar, folder akan di zip dan folder akan di delete(sehingga hanya menyisakan 
 .zip). <br/>
+
+```
+char zipFile[512];
+sprintf(zipFile, "%s.zip", folder);
+char *args[] = {"zip", "-rm", zipFile, folder, NULL};
+execv("/usr/bin/zip", args);
+```
+
 (d) Karena takut program tersebut lepas kendali, Kiwa ingin program tersebut mengenerate sebuah program "killer" yang siap di 
 run(executable) untuk menterminasi semua operasi program tersebut. Setelah di run, program yang menterminasi ini lalu akan mendelete 
 dirinya sendiri. <br/>
+
+```
+fprintf(fp, "#!/bin/bash\nkill -9 %d\nrm killer", getpid());
+```
+
 (e) Kiwa menambahkan bahwa program utama bisa dirun dalam dua mode, yaitu MODE_A dan MODE_B. Untuk mengaktifkan MODE_A, program harus 
 dijalankan dengan argumen -a. Untuk MODE_B, program harus dijalankan dengan argumen -b. Ketika dijalankan dalam MODE_A, program utama 
 akan langsung menghentikan semua operasinya ketika program killer dijalankan. Untuk MODE_B, ketika program killer dijalankan, program 
 utama akan berhenti tapi membiarkan proses di setiap folder yang masih berjalan sampai selesai(semua folder terisi gambar, terzip lalu 
 di delete). <br/>
 
+```
+FILE *fp;
+  int stat;
+  fp = fopen("/home/elaaaaaaa/Soal2/killer.sh", "w+");
+  if(strcmp(argument[1], "-a") == 0)
+  {
+	fprintf(fp, "#!/bin/bash\nkill -9 %d\nrm killer", getpid());
+  }
+  if(strcmp(argument[1], "-b") == 0)
+  {
+	fprintf(fp, "#!/bin/bash\nkill %d\nrm killer", getpid());
+  }
+
+  
+  if(fork() == 0)
+  {
+     if(fork() == 0)
+     {
+	char *args[] = {"chmod", "u+x", "/home/elaaaaaaa/Soal2/killer.sh", NULL};
+	execv("/bin/chmod", args);
+     }
+     else
+     {
+	while(wait(&stat) > 0);
+	char *args[] = {"mv", "/home/elaaaaaaa/Soal2/killer.sh", "killer", NULL};
+	execv("/bin/mv", args);
+     }
+  }
+
+  fclose(fp);
+```
+
 ### Kendala
-Untuk soal nomor 2 ini baru bisa sampai pembuatan direktori dengan nama file timestamp. Masih terjadi error saat menjalankan fungsi 
-download. Untuk sisa jawaban dari soal2 ini akan dicoba saat revisi.
+Program killer untuk menterminasi semua operasi program tersebut tidak berjalan ketika dijalankan dengan argumen -a.
 
 ## soal3
 Jaya adalah seorang programmer handal mahasiswa informatika. Suatu hari dia memperoleh tugas yang banyak dan berbeda tetapi harus 
